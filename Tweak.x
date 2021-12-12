@@ -190,12 +190,12 @@ int indexOf(NSString *string, NSString *target) {
 			[mathLabel setTextAlignment:NSTextAlignmentRight];
 			[mathLabel setAttributedText:attrString];
 			[mathLabel setTranslatesAutoresizingMaskIntoConstraints:NO];
-
 			
 			[cell.contentView.subviews makeObjectsPerformSelector:@selector(removeFromSuperview)];
 			[cell.contentView addSubview:mathLabel];
 			[cell.contentView addSubview:dateLabel];
 
+			[cell addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:[mathLabel(==200)]" options:0 metrics:nil views:NSDictionaryOfVariableBindings(mathLabel)]];
 			[cell addConstraint:[NSLayoutConstraint constraintWithItem:dateLabel attribute:NSLayoutAttributeCenterY relatedBy:NSLayoutRelationEqual toItem:cell attribute:NSLayoutAttributeCenterY multiplier:1.0 constant:0.0]];
 			[cell addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-30-[dateLabel]" options:0 metrics:nil views:NSDictionaryOfVariableBindings(dateLabel)]];
 			[cell addConstraint:[NSLayoutConstraint constraintWithItem:mathLabel attribute:NSLayoutAttributeCenterY relatedBy:NSLayoutRelationEqual toItem:cell attribute:NSLayoutAttributeCenterY multiplier:1.0 constant:0.0]];
