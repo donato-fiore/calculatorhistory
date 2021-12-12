@@ -1,9 +1,9 @@
 Package: com.fiore.calculatorhistory
 Name: CalculatorHistory
-Version: 1.0
+Version: 1.1
 Architecture: iphoneos-arm
 Description: Calculator gains history!
 Maintainer: Donato Fiore
 Author: Donato Fiore
 Section: Tweaks
-Depends: mobilesubstrate (>= 0.9.5000)
+Depends: mobilesubstrate (>= 0.9.5000), firmware (>= 13.0)
