@@ -66,12 +66,12 @@ void clearHistory() {
 }
 
 int indexOf(NSString *string, NSString *target) {
-    NSRange range = [string rangeOfString:target];
-    if (range.length > 0) {
-        return range.location;
-    } else {
-        return -1;
-    }
+	NSRange range = [string rangeOfString:target];
+	if (range.length > 0) {
+		return range.location;
+	} else {
+		return -1;
+	}
 }
 
 @implementation CalculatorHistoryViewController
@@ -94,10 +94,10 @@ int indexOf(NSString *string, NSString *target) {
 	[self cofigureTableview];
 	_content = getCalculatorHistory();
 	_navBar.translatesAutoresizingMaskIntoConstraints = NO;
-	
+
 	[_navBar setItems:@[navItem]];
 	[self.view addSubview:_navBar];
-	
+
 	[self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-0-[_navBar]-0-|" options:0 metrics:nil views:NSDictionaryOfVariableBindings(_navBar)]];
 	[_navBar.topAnchor constraintEqualToAnchor:margins.topAnchor].active = YES;
 	[_navBar.heightAnchor constraintEqualToConstant:44].active = YES;
@@ -105,27 +105,21 @@ int indexOf(NSString *string, NSString *target) {
 
 -(void)cofigureTableview {
 	UILayoutGuide *margins = self.view.layoutMarginsGuide;
-	
+
 	_table = [[UITableView alloc] init];
-	CGRect frame = _table.frame;
-	frame.origin.y = 54.0;
-	_table.frame = frame;
-
-    _table.delegate = self;
-    _table.dataSource = self;
+	_table.delegate = self;
+	_table.dataSource = self;
 	_table.backgroundColor = [UIColor colorWithRed: 0.20 green: 0.20 blue: 0.20 alpha: 1.00];
-    _table.tableFooterView = [UIView new];
-
+	_table.tableFooterView = [UIView new];
 	_table.translatesAutoresizingMaskIntoConstraints = NO;
 	[self.view addSubview:_table];
-	
-	[self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-0-[_table]-0-|" options:0 metrics:nil views:NSDictionaryOfVariableBindings(_table)]];
-	[_table.topAnchor constraintEqualToAnchor:margins.topAnchor constant:44].active = YES;
-	[_table.heightAnchor constraintEqualToConstant:self.view.bounds.size.height].active = YES;
-}
 
+	[self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-0-[_table]-0-|" options:0 metrics:nil views:NSDictionaryOfVariableBindings(_table)]];
+	[self.view addConstraint:[NSLayoutConstraint constraintWithItem:_table attribute:NSLayoutAttributeBottom relatedBy:NSLayoutRelationEqual toItem:self.view attribute:NSLayoutAttributeBottom multiplier:1.0 constant:0.0]];
+	[_table.heightAnchor constraintEqualToAnchor:margins.heightAnchor constant:-56].active = YES;
+}
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return [_content count];
+	return [_content count];
 }
 -(BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {
 	return YES;
@@ -151,14 +145,13 @@ int indexOf(NSString *string, NSString *target) {
 }
 
 -(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-	static NSString *cellIdentifier = @"cellIdentifier";
-    UITableViewCell *cell = [_table dequeueReusableCellWithIdentifier:cellIdentifier];
-    if(cell == nil) {
-        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellIdentifier];
-    }
-    
-	if([_content count] > 0) {
+static NSString *cellIdentifier = @"cellIdentifier";
+	UITableViewCell *cell = [_table dequeueReusableCellWithIdentifier:cellIdentifier];
+	if(cell == nil) {
+		cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellIdentifier];
+	}
 
+	if([_content count] > 0) {
 		[cell setBackgroundColor:[UIColor colorWithRed: 0.20 green: 0.20 blue: 0.20 alpha: 1.00]];
 
 		UILabel *dateLabel = [[UILabel alloc] init];
@@ -184,16 +177,15 @@ int indexOf(NSString *string, NSString *target) {
 		[dateLabel setBackgroundColor:[UIColor clearColor]];
 		[dateLabel setText:[NSString stringWithFormat:@"%@\n%@", dateString, day]];
 		[dateLabel setFont:[UIFont monospacedDigitSystemFontOfSize:15 weight:UIFontWeightRegular]];
-		
-		UILabel *mathLabel = [[UILabel alloc] init];
 
+		UILabel *mathLabel = [[UILabel alloc] init];
 		NSString *text = [_content objectAtIndex:indexPath.row];
 		NSMutableAttributedString *attrString = [[NSMutableAttributedString alloc] initWithString:text attributes:@{NSFontAttributeName: [UIFont monospacedDigitSystemFontOfSize:20 weight:UIFontWeightRegular]}];
 		[attrString addAttribute:NSForegroundColorAttributeName value:[UIColor systemOrangeColor] range:NSMakeRange(0, indexOf(text, @"=") + 1)];
 		[mathLabel setTextAlignment:NSTextAlignmentRight];
 		[mathLabel setAttributedText:attrString];
 		[mathLabel setTranslatesAutoresizingMaskIntoConstraints:NO];
-		
+
 		[cell.contentView.subviews makeObjectsPerformSelector:@selector(removeFromSuperview)];
 		[cell.contentView addSubview:mathLabel];
 		[cell.contentView addSubview:dateLabel];
@@ -204,18 +196,18 @@ int indexOf(NSString *string, NSString *target) {
 		[cell addConstraint:[NSLayoutConstraint constraintWithItem:mathLabel attribute:NSLayoutAttributeCenterY relatedBy:NSLayoutRelationEqual toItem:cell attribute:NSLayoutAttributeCenterY multiplier:1.0 constant:0.0]];
 		[cell addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:[mathLabel]-30-|" options:0 metrics:nil views:NSDictionaryOfVariableBindings(mathLabel)]];
 	}
-    return cell;
+	return cell;
 }
 
 -(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-   return 60;
+	return 60;
 }
 
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-	UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"See More" message:[NSString stringWithString:[getCalculatorHistory() objectAtIndex:indexPath.row]] preferredStyle:UIAlertControllerStyleAlert];
-    UIAlertAction *defaultAction = [UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {}];
-    [alert addAction:defaultAction];
-    [self presentViewController:alert animated:YES completion:nil];
+	UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Details" message:[NSString stringWithString:[getCalculatorHistory() objectAtIndex:indexPath.row]] preferredStyle:UIAlertControllerStyleAlert];
+	UIAlertAction *defaultAction = [UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {}];
+	[alert addAction:defaultAction];
+	[self presentViewController:alert animated:YES completion:nil];
 	[tableView deselectRowAtIndexPath:indexPath animated:YES];
 }
 
@@ -234,12 +226,10 @@ int indexOf(NSString *string, NSString *target) {
 @end
 
 %hook DisplayView
-BOOL addedToView = false;
--(void)layoutSubviews {
+-(void)didMoveToSuperview {
 	displayView = self;
 	%orig;
-	if(!addedToView) {
-		UINavigationBar *navbar = [[UINavigationBar alloc] initWithFrame:CGRectMake(0, 0, displayView.bounds.size.width, 50)];
+		UINavigationBar *navbar = [[UINavigationBar alloc] initWithFrame:CGRectMake(0, 0, [UIScreen mainScreen].bounds.size.width, 50)];
 		UINavigationBarAppearance *appearance = [UINavigationBarAppearance new];
 		[appearance configureWithTransparentBackground];
 		navbar.standardAppearance = appearance;
@@ -253,9 +243,6 @@ BOOL addedToView = false;
 
 		[navbar setItems:@[navItem]];
 		[self addSubview:navbar];
-
-		addedToView = true;
-	}
 }
 
 %new
