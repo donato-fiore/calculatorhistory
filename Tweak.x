@@ -62,6 +62,7 @@ int hooked_CalculatePerformExpression(char* expr, int significantDigits, int fla
     if ([formatted length] == 0 || [answerString length] == 0 || [expression containsString:@".)"]) return ret;
     
     NSString *result = [NSString stringWithFormat:@"%@ = %@", formatted, answerString];
+    NSLog(@"[calc] original format: %@", result);
 
     NSMutableString *mutableResult = [result mutableCopy];
     NSString *regexPattern = @"\\d+\\.?\\d*"; // match numbers
@@ -72,6 +73,7 @@ int hooked_CalculatePerformExpression(char* expr, int significantDigits, int fla
         NSLog(@"[calc] match: %@", strNumber);
 
         NSNumberFormatter *numberFormatter = [[NSNumberFormatter alloc] init];
+        numberFormatter.locale = [NSLocale localeWithLocaleIdentifier:@"en_US"];
         numberFormatter.numberStyle = NSNumberFormatterDecimalStyle;
 
         NSNumber *number = [numberFormatter numberFromString:strNumber];
@@ -87,6 +89,7 @@ int hooked_CalculatePerformExpression(char* expr, int significantDigits, int fla
 
         NSRange rangeOfOriginalNumber = [mutableResult rangeOfString:strNumber];
         if (rangeOfOriginalNumber.location != NSNotFound) {
+            numberFormatter.locale = [NSLocale currentLocale];
             NSLog(@"[calc] replacing %@ with %@", strNumber, [numberFormatter stringFromNumber:number]);
             [mutableResult replaceCharactersInRange:rangeOfOriginalNumber withString:[numberFormatter stringFromNumber:number]];
         }
