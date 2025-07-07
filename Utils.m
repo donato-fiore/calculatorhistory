@@ -99,13 +99,13 @@ NSString *parseExpression(NSString *expression) {
     expression = [expression stringByReplacingOccurrencesOfString:@"3.141592653589793238462643383279503" withString:@"π"];
     expression = [expression stringByReplacingOccurrencesOfString:@"2.718281828459045235360287471352662" withString:@"e"];
 
-    if (specialBehavior == kRadical && (![expression containsString:@"pow"] || ![expression containsString:@"/"])) {
+    if (specialBehavior == SpecialBehavior_radical && (![expression containsString:@"pow"] || ![expression containsString:@"/"])) {
         NSLog(@"[calc] invalidating specialB");
-        specialBehavior = kInvalid;
+        specialBehavior = SpecialBehavior_none;
     }
-    if ([expression containsString:@"pow("] && [expression containsString:@")*("]) specialBehavior = kScientificNotation;
-    if (specialBehavior == kLogarithm && ![expression containsString:@"log("]) specialBehavior = kInvalid;
-    if ([expression containsString:@"log("]) specialBehavior = kLogarithm;
+    if ([expression containsString:@"pow("] && [expression containsString:@")*("]) specialBehavior = SpecialBehavior_scientificNotation;
+    if (specialBehavior == SpecialBehavior_logarithm && ![expression containsString:@"log("]) specialBehavior = SpecialBehavior_none;
+    if ([expression containsString:@"log("]) specialBehavior = SpecialBehavior_logarithm;
 
     if ([expression containsString:@"pow("] && [expression containsString:@"1.0/"]) {
         NSLog(@"[calc] power with inverse");
@@ -122,17 +122,17 @@ NSString *parseExpression(NSString *expression) {
     }
 
     switch (specialBehavior) {
-        case kPercent:
-            specialBehavior = kInvalid;
+        case SpecialBehavior_percent:
+            specialBehavior = SpecialBehavior_none;
             expression = [expression componentsSeparatedByString:@"/"].firstObject;
             expression = [expression stringByReplacingOccurrencesOfString:@"(" withString:@""];
             expression = [expression stringByReplacingOccurrencesOfString:@")" withString:@""];
             expression = [NSString stringWithFormat:@"%@\uFF05", expression];
             if ([expression isEqualToString:@"0\uFF05"]) return @"";
             return expression;
-        case kRadical: {
+        case SpecialBehavior_radical: {
                 NSLog(@"[calc] using radical");
-                specialBehavior = kInvalid;
+                specialBehavior = SpecialBehavior_none;
                 NSArray *components = [expression componentsSeparatedByString:@","];
                 NSString *radicand = [components.firstObject componentsSeparatedByString:@"("].lastObject;
                 if ([radicand isEqualToString:@"0"]) return @"";
@@ -145,19 +145,19 @@ NSString *parseExpression(NSString *expression) {
 
                 return [NSString stringWithFormat:@"%@√(%@)", superscript(index), radicand];
         }
-        case kInverse:
+        case SpecialBehavior_reciprocal:
             expression = [[expression componentsSeparatedByString:@"("].lastObject stringByReplacingOccurrencesOfString:@")" withString:@""];
             return [NSString stringWithFormat:@"%@>>-1>>", expression];
-        case kScientificNotation: {
-            specialBehavior = kInvalid;
+        case SpecialBehavior_scientificNotation: {
+            specialBehavior = SpecialBehavior_none;
             NSArray *components = [expression componentsSeparatedByString:@")*("];
             
             NSString *coefficient = [components.lastObject stringByReplacingOccurrencesOfString:@")" withString:@""];
             NSString *exponent = [components.firstObject componentsSeparatedByString:@","].lastObject;
             return [NSString stringWithFormat:@"%@×10%@", coefficient, superscript(exponent)];
         }
-        case kLogarithm: {
-            specialBehavior = kInvalid;
+        case SpecialBehavior_logarithm: {
+            specialBehavior = SpecialBehavior_none;
             NSArray *components = [expression componentsSeparatedByString:@"log("];
             NSString *base = [components.lastObject stringByReplacingOccurrencesOfString:@")" withString:@""];
             NSString *argument = [[components[1] componentsSeparatedByString:@"("].lastObject stringByReplacingOccurrencesOfString:@")/" withString:@""];
@@ -202,18 +202,3 @@ NSString *parseExpression(NSString *expression) {
 
     return expression;
 }
-
-@implementation UIFont (Rounded)
-
-+ (UIFont *)roundedFontOfSize:(CGFloat)size weight:(UIFontWeight)weight {
-    UIFont *systemFont = [UIFont systemFontOfSize:size weight:weight];
-    UIFontDescriptor *descriptor = [systemFont.fontDescriptor fontDescriptorWithDesign:UIFontDescriptorSystemDesignRounded];
-    
-    if (descriptor) {
-        return [UIFont fontWithDescriptor:descriptor size:size];
-    }
-    
-    return systemFont;
-}
-
-@end

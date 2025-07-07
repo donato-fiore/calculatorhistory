@@ -1,47 +1,48 @@
 #import <dlfcn.h>
 
-#import "Headers.h"
-#import "Utils.h"
-#import "CHViewController.h"
-#import "CHHistoryManager.h"
+#import "Tweak.h"
+#import "CalculatorHistoryRecordManager.h"
+#import "CalculatorHistoryRecord.h"
 
-%hook UITableViewCell
-%property (nonatomic, strong) UILabel *resultLabel;
-%end
+#import "Utils.h"
+#import "CalculatorHistoryViewController.h"
+
+#import "Extensions/UIImage+CalculatorHistory.h"
 
 NSInteger specialBehavior;
 bool bypassDefault;
 
 %hook DisplayView
-%property (nonatomic, strong) UINavigationBar *navbar;
-%property (nonatomic, strong) UINavigationItem *navItem;
+%property (nonatomic, strong) UINavigationBar *navigationBar;
+%property (nonatomic, strong) UINavigationItem *navigationItem;
 
 - (void)didMoveToSuperview {
 	%orig;
 
-    DisplayView *displayView = (DisplayView *)self;
-    
-    specialBehavior = kInvalid;
+    specialBehavior = SpecialBehavior_none;
     bypassDefault = false;
+    DisplayView *displayView = self;
+    
+    if (!displayView.navigationBar) {
+        displayView.navigationBar = [[UINavigationBar alloc] initWithFrame:CGRectMake(0, 0, [UIScreen mainScreen].bounds.size.width, 50)];
+        UINavigationBarAppearance *appearance = [UINavigationBarAppearance new];
+        [appearance configureWithTransparentBackground];
+        displayView.navigationBar.standardAppearance = appearance;
 
-    displayView.navbar = [[UINavigationBar alloc] initWithFrame:CGRectMake(0, 0, [UIScreen mainScreen].bounds.size.width, 50)];
-    UINavigationBarAppearance *appearance = [UINavigationBarAppearance new];
-    [appearance configureWithTransparentBackground];
-    displayView.navbar.standardAppearance = appearance;
+        displayView.navigationItem = [[UINavigationItem alloc] init];
+        [displayView.navigationBar setItems:@[displayView.navigationItem]];
 
-    displayView.navItem = [[UINavigationItem alloc] init];
-    UIImageSymbolConfiguration *config = [UIImageSymbolConfiguration configurationWithPointSize:20 weight:UIImageSymbolWeightMedium scale:UIImageSymbolScaleMedium];
-    UIImage *historyImage = [UIImage systemImageNamed:@"clock.arrow.circlepath" withConfiguration:config];
-    UIBarButtonItem *historyButton = [[UIBarButtonItem alloc] initWithImage:historyImage style:UIBarButtonItemStylePlain target:self action:@selector(history)];
+        [self addSubview:displayView.navigationBar];
+    }
+
+    UIImage *historyImage = [UIImage calc_systemImageWithName:@"clock.arrow.circlepath"];
+    UIBarButtonItem *historyButton = [[UIBarButtonItem alloc] initWithImage:historyImage style:UIBarButtonItemStylePlain target:self action:@selector(_historyButtonTapped)];
     historyButton.tintColor = [UIColor systemOrangeColor];
-    displayView.navItem.leftBarButtonItem = historyButton;
-
-    [displayView.navbar setItems:@[displayView.navItem]];
-    [self addSubview:displayView.navbar];
+    [displayView.navigationItem setLeftBarButtonItem:historyButton animated:NO];
 }
 
 %new
-- (void)history {
+- (void)_historyButtonTapped {
 	CalculatorHistoryViewController *vc = [[CalculatorHistoryViewController alloc] init];
 	UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:vc];
 	nav.modalPresentationStyle = UIModalPresentationFormSheet;
@@ -118,8 +119,9 @@ int hooked_CalculatePerformExpression(char* expr, int significantDigits, int fla
             }
         }
     }
-    
-    [[CHHistoryManager sharedManager] append:result];
+
+    CalculatorHistoryRecord *record = [[CalculatorHistoryRecord alloc] initWithExpression:result];
+    [[CalculatorHistoryRecordManager sharedManager] addRecord:record];
 
     NSLog(@"[calc] logging: %@", result);
 	
@@ -128,41 +130,43 @@ int hooked_CalculatePerformExpression(char* expr, int significantDigits, int fla
 
 %hook CalculatorModel
 
-- (void)buttonPressed:(NSInteger)buttonID {
+- (void)buttonPressed:(CalculatorButtonID)buttonID {
     switch (buttonID) {
-        case 4:
-            specialBehavior = kPercent;
+        case CalculatorButton_percent:
+            specialBehavior = SpecialBehavior_percent;
             break;
-        case 33:
-            specialBehavior = kInverse;
+
+        case CalculatorButton_reciprocal:
+            specialBehavior = SpecialBehavior_reciprocal;
             break;
-        case 34:
-            specialBehavior = kRadical;
+
+        case CalculatorButton_squareRoot:
+        case CalculatorButton_cubeRoot:
+            specialBehavior = SpecialBehavior_radical;
             break;
-        case 35:
-            specialBehavior = kRadical;
-            break;
-        case 36:
-            specialBehavior = kRadical;
+
+        case CalculatorButton_root:
+            specialBehavior = SpecialBehavior_radical;
             bypassDefault = true;
             break;
-        case 38:
-            specialBehavior = kLogarithm;
+
+        case CalculatorButton_logarithmBase10:
+        case CalculatorButton_logarithm:
+            specialBehavior = SpecialBehavior_logarithm;
             bypassDefault = true;
             break;
-        case 44:
-            specialBehavior = kScientificNotation;
+
+        case CalculatorButton_logarithmBase2:
+            specialBehavior = SpecialBehavior_logarithm;
+            break;
+
+        case CalculatorButton_timesPowerOfTen:
+            specialBehavior = SpecialBehavior_scientificNotation;
             bypassDefault = true;
             break;
-        case 56:
-            specialBehavior = kLogarithm;
-            bypassDefault = true;
-            break;
-        case 57:
-            specialBehavior = kLogarithm;
-            break;
+
         default:
-            if (!bypassDefault) specialBehavior = kInvalid;
+            if (!bypassDefault) specialBehavior = SpecialBehavior_none;
             break;
     }
 

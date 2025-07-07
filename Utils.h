@@ -1,10 +1,5 @@
-#import "Headers.h"
+#import "Tweak.h"
 
-@interface UIFont (Rounded)
-+ (UIFont *)roundedFontOfSize:(CGFloat)size weight:(UIFontWeight)weight;
-@end
-
-extern bool inputUnitSelected;
 extern NSInteger specialBehavior;
 extern bool bypassDefault;
 
